@@ -153,16 +153,27 @@ unsigned char Result=0;
 int main()
 {
 	int i = 0;
+	int n = 0;
   	Port_Setup();
 	
 	while(1) 
 	{
 		// LED off
-		rPIO_CODR_B=(LED1|LED2|LED3);
-		for(i = 0; i < 10; ++i) Delay(100000);
+		//rPIO_CODR_B=(LED1|LED2|LED3);
+		//for(i = 0; i < 10; ++i) Delay(100000);
 
 		// LED on
-		rPIO_SODR_B=(LED1|LED2|LED3);
-		for(i = 0; i < 10; ++i) Delay(100000);
+		//rPIO_SODR_B=(LED1|LED2|LED3);
+		//for(i = 0; i < 10; ++i) Delay(100000);
+		
+		rPIO_CODR_B=(LED1|LED2|LED3);
+		
+		if(n%3 == 0) rPIO_SODR_B=(LED1);
+		if(n%3 == 1) rPIO_SODR_B=(LED2);
+		if(n%3 == 2) rPIO_SODR_B=(LED3);	
+				
+		n++;		
+		
+		for(i = 0; i < 10; ++i) Delay(100000);	
 	}	
 }
