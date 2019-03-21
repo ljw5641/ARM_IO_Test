@@ -148,21 +148,47 @@ unsigned char Result=0;
 }
 //-----------------------------------------------------------------------------
 /// Main Procedure
-//-----------------------------------------------------------------------------
-                   
-int main()
+//-----------------------------------------------------------------------------                                         
+      
+
+void kit(int k, int a, int increment)
 {
 	int i = 0;
+	for(i=a;i<=k;i = i + increment)
+		{
+			rPIO_SODR_B=(1<<i);
+			for(j = 0; j < 10; ++j) Delay(100000);
+		}
+}
+                                 
+int main()
+{
+	int i = 0, j = 0, k = 0,a = 0;
+	const int first=0;
+	const int last=99;
+	int n=0;
+	int increment = 0;
+	void kit(int k, int a, int increment);
   	Port_Setup();
 	
 	while(1) 
 	{
-		// LED off
-		rPIO_CODR_B=(LED1|LED2|LED3);
-		for(i = 0; i < 10; ++i) Delay(100000);
-
-		// LED on
-		rPIO_SODR_B=(LED1|LED2|LED3);
-		for(i = 0; i < 10; ++i) Delay(100000);
+		
+		if (n%2 == 0)
+		{
+			k=last;
+			a = first;
+			increment = 1;
+			kit(k, a, increment);
+		}
+		else 
+		{
+			k=first;
+			a = last;
+			increment = -1;
+			kit(k, a, increment);
+		}
+					
+		n++;
 	}	
 }
