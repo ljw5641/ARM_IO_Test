@@ -132,63 +132,28 @@ void CMOS_Read_Clk(void)
 }
 */
 
-unsigned char Switch_Check(void)
-{
-unsigned char Result=0;
 
-	if(!(rPIO_PDSR_A & SW1)) Result=LEFT;
-	else if(!(rPIO_PDSR_A & SW2)) Result=RIGHT;
-	
-	
-	if(Pre_Key_Data==Result) Key_Count++;
-	else Key_Count=0;
-	
-	Pre_Key_Data=Result;
-	return	Result;
-}
+
 //-----------------------------------------------------------------------------
 /// Main Procedure
 //-----------------------------------------------------------------------------                                         
       
-
-void kit(int k, int a, int increment)
-{
-	int i = 0;
-	for(i=a;i<=k;i = i + increment)
-		{
-			rPIO_SODR_B=(1<<i);
-			for(j = 0; j < 10; ++j) Delay(100000);
-		}
-}
                                  
 int main()
 {
-	int i = 0, j = 0, k = 0,a = 0;
-	const int first=0;
-	const int last=99;
 	int n=0;
-	int increment = 0;
-	void kit(int k, int a, int increment);
+
   	Port_Setup();
 	
-	while(1) 
+	DBG_Init();
+	
+	Uart_Printf("Hello Word\n\r");
+	
+	while(1)
 	{
+		Uart_Printf("n=%d\n\r",n);
 		
-		if (n%2 == 0)
-		{
-			k=last;
-			a = first;
-			increment = 1;
-			kit(k, a, increment);
-		}
-		else 
-		{
-			k=first;
-			a = last;
-			increment = -1;
-			kit(k, a, increment);
-		}
-					
 		n++;
-	}	
+	}
+		
 }
