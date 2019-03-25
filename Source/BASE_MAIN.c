@@ -152,59 +152,35 @@ unsigned char Result=0;
                    
 int main()
 {
-	int i = 0;
-	int n = 0;
+	int i = 0, j = 0,k = 0;
+	int num2[1000]={0,};
+	int num[8]={0,1,2,3,4,5,6,7};
+	
   	Port_Setup();
 	
 	while(1) 
 	{
-		// LED off
-		//rPIO_CODR_B=(LED1|LED2|LED3);
-		//for(i = 0; i < 10; ++i) Delay(100000);
-
-		// LED on
-		//rPIO_SODR_B=(LED1|LED2|LED3);
-		//for(i = 0; i < 10; ++i) Delay(100000);
+		int num2[1000]={0,};
 		
-		/*
-		rPIO_CODR_B=(LED1|LED2|LED3);
-		
-		if(n%3 == 0) rPIO_SODR_B=(LED1);
-		if(n%3 == 1) rPIO_SODR_B=(LED2);
-		if(n%3 == 2) rPIO_SODR_B=(LED3);	
-				
-		n++;		
-		
-		for(i = 0; i < 10; ++i) Delay(100000);	
-		*/
-		
-		
-		
-		rPIO_CODR_B=(LED1|LED2|LED3);
-
-		switch(n%4)
+		for (j = 0;j <= 7;j++)
 		{
-			case 0:
-				rPIO_SODR_B=(LED1);
-				break;
-			
-			case 1:
-				rPIO_SODR_B=(LED2);
-				break;
-			
-			case 2:
-				rPIO_SODR_B=(LED3);
-				break;
-				
-			case 3:
-				rPIO_SODR_B=(LED2);
-				break;
-		}  
-		
-		for(i = 0; i < 10; ++i) Delay(100000);
-		
-		n++;
-		
-		
-	}	
+			for (i = 2;i >= 0;i--)
+			{
+				num2[i] = num[j] % 2;
+				num[j] /= 2;
+				if (num[j] <= 0) break;
+			}
+
+			for (i = 2;i >= 0;i--)
+			{
+				num2[i];
+				if(num2[2] == 1) rPIO_SODR_B=(LED1);
+				if(num2[1] == 1) rPIO_SODR_B=(LED2);
+				if(num2[0] == 1) rPIO_SODR_B=(LED3);
+				for(k = 0; k < 10; ++k) Delay(100000);		
+			}
+			rPIO_CODR_B=(LED1|LED2|LED3);
+			for(k = 0; k < 10; ++k) Delay(100000);
+		}
+	}
 }
