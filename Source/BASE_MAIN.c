@@ -132,55 +132,28 @@ void CMOS_Read_Clk(void)
 }
 */
 
-unsigned char Switch_Check(void)
-{
-unsigned char Result=0;
 
-	if(!(rPIO_PDSR_A & SW1)) Result=LEFT;
-	else if(!(rPIO_PDSR_A & SW2)) Result=RIGHT;
-	
-	
-	if(Pre_Key_Data==Result) Key_Count++;
-	else Key_Count=0;
-	
-	Pre_Key_Data=Result;
-	return	Result;
-}
+
 //-----------------------------------------------------------------------------
 /// Main Procedure
-//-----------------------------------------------------------------------------
-                   
+//-----------------------------------------------------------------------------                                         
+      
+                                 
 int main()
 {
-	int i = 0, j = 0,k = 0;
-	int num2[1000]={0,};
-	int num[8]={0,1,2,3,4,5,6,7};
-	
+	int n=0;
+
   	Port_Setup();
 	
-	while(1) 
+	DBG_Init();
+	
+	Uart_Printf("Hello Word\n\r");
+	
+	while(1)
 	{
-		int num2[1000]={0,};
+		Uart_Printf("n=%d\n\r",n);
 		
-		for (j = 0;j <= 7;j++)
-		{
-			for (i = 2;i >= 0;i--)
-			{
-				num2[i] = num[j] % 2;
-				num[j] /= 2;
-				if (num[j] <= 0) break;
-			}
-
-			for (i = 2;i >= 0;i--)
-			{
-				num2[i];
-				if(num2[2] == 1) rPIO_SODR_B=(LED1);
-				if(num2[1] == 1) rPIO_SODR_B=(LED2);
-				if(num2[0] == 1) rPIO_SODR_B=(LED3);
-				for(k = 0; k < 10; ++k) Delay(100000);		
-			}
-			rPIO_CODR_B=(LED1|LED2|LED3);
-			for(k = 0; k < 10; ++k) Delay(100000);
-		}
+		n++;
 	}
+		
 }
