@@ -141,17 +141,37 @@ void CMOS_Read_Clk(void)
                                  
 int main()
 {
-	int n=0;
+	int n = 0;
+	int n1 = 0;
+	int i = 0;
+	int factorial = 0;
+	int f = 0;
 
   	Port_Setup();
 	
 	DBG_Init();
 	
-	Uart_Printf("Hello Word\n\r");
-	
-	while(1)
+	while (1)
 	{
-		Uart_Printf("n=%d\n\r",n);
+		n1 = n;
+
+		factorial = 0;
+		f = 1;
+
+		for (i = 0;i < n1;i++)
+		{
+			factorial = n1-i;
+			f *= factorial;
+		}
+
+		Uart_Printf("%d! = %d\n\r", n, f);
+		
+		for(i=0;i<10;++i) Delay(100000);
+		for(i=0;i<10;++i) Delay(100000);
+		for(i=0;i<10;++i) Delay(100000);
+		for(i=0;i<10;++i) Delay(100000);
+		for(i=0;i<10;++i) Delay(100000);
+		for(i=0;i<10;++i) Delay(100000);
 		
 		n++;
 	}
