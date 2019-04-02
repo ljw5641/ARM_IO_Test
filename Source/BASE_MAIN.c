@@ -138,7 +138,7 @@ void CMOS_Read_Clk(void)
 /// Main Procedure
 //-----------------------------------------------------------------------------                                         
       
-int factorial(int n)
+int fibonacci(int n)
 {
 // n! = n * (n-1)!
 // a_n = n * a_{n-1}
@@ -150,19 +150,18 @@ int factorial(int n)
 		
 
 		for (i = 1;i <= n;i++) factorial *= i;*/
-		if(n==0)
-		{
-			return 1;
-		}
-
 		
-		return n*factorial(n-1);
+		//if(n>2) return fibonacci(n-1)+fibonacci(n-2);
+		
+		if (n == 1 || n == 2) return 1;
+		
+		return fibonacci(n-1)+fibonacci(n-2);
 } 
 
                                  
 int main()
 {
-	int n = 0;
+	int n = 1;
 	int i = 0;
   	Port_Setup();
 	
@@ -170,11 +169,10 @@ int main()
 	
 	while (1)
 	{
-		Uart_Printf("%d! = %d\n\r", n, factorial(n));
+		Uart_Printf("%d번째 피보나치 = %d\n\r",n, fibonacci(n));
 		
 		for(i=0;i<10;++i) Delay(100000);
-
-	
+		
 		n++;
 	}
 		
