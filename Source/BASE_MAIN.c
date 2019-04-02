@@ -137,43 +137,81 @@ void CMOS_Read_Clk(void)
 //-----------------------------------------------------------------------------
 /// Main Procedure
 //-----------------------------------------------------------------------------                                         
-      
-int fibonacci(int n)
+  
+  
+  
+// PIT interrupt service routine
+volatile unsigned int ms_count = 0;
+void PIT_ISR()
 {
-// n! = n * (n-1)!
-// a_n = n * a_{n-1}
+	// Clear PITS
+	AT91F_PITGetPIVR(AT91C_BASE_PITC);
 
-	/*factorial(n-1);
+	// increase ms_count
+	ms_count++;
+}
 
-	int i = 0;
-	int factorial = 1;
-		
+// Initialize PIT and interrupt
+void PIT_initiailize()
+{
+	// enable peripheral clock for PIT
+	AT91F_PITC_CfgPMC();
 
-		for (i = 1;i <= n;i++) factorial *= i;*/
-		
-		//if(n>2) return fibonacci(n-1)+fibonacci(n-2);
-		
-		if (n == 1 || n == 2) return 1;
-		
-		return fibonacci(n-1)+fibonacci(n-2);
-} 
+	// set the period to be every 1 msec in 48MHz
+	AT91F_PITInit(AT91C_BASE_PITC, 1, 48);
+
+	// PIV (Periodic Interval Value) = 3000 clocks = 1 msec
+	// MCK/16 = 48,000,000 / 16 = 3,000,000 clocks/sec
+	AT91F_PITSetPIV(AT91C_BASE_PITC, 3000-1);
+
+	// disable PIT periodic interrupt for now
+	AT91F_PITDisableInt(AT91C_BASE_PITC);
+
+	// interrupt handler initializatioin
+	AT91F_AIC_ConfigureIt(AT91C_BASE_AIC, AT91C_ID_SYS, 7, 1, PIT_ISR);
+
+	// enable the PIT interrupt
+	AT91F_AIC_EnableIt(AT91C_BASE_AIC, AT91C_ID_SYS);
+}
+
+// delay in ms by PIT interrupt
+void HW_delay_ms(unsigned int ms)
+{
+	// special case
+	if(ms == 0) return;
+
+	// start time
+	ms_count = 0;
+
+	// enable PIT interrupt
+	AT91F_PITEnableInt(AT91C_BASE_PITC);
+
+	// wait for ms
+	while(ms_count < ms);
+
+	// disable PIT interrupt
+	AT91F_PITDisableInt(AT91C_BASE_PITC);
+}  
 
                                  
 int main()
 {
-	int n = 1;
-	int i = 0;
-  	Port_Setup();
-	
+	int n = 0;
+  	// UART 
 	DBG_Init();
-	
-	while (1)
+	Uart_Printf("Hello World\n\r");
+
+	// PIT setup
+	PIT_initiailize();
+
+	while(1) 
 	{
-		Uart_Printf("%d번째 피보나치 = %d\n\r",n, fibonacci(n));
-		
-		for(i=0;i<10;++i) Delay(100000);
-		
-		n++;
-	}
-		
+		//n++;
+		// print
+		Uart_Printf("%d\n",n);
+
+		// wait for 1000ms
+		HW_delay_ms(1000);
+
+	}	
 }
