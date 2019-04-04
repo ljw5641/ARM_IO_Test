@@ -196,22 +196,44 @@ void HW_delay_ms(unsigned int ms)
                                  
 int main()
 {
-	int n = 0;
+	int ms = 0;
+	int s = 0;
+	int m = 0;
+	int h = 0;
+	
   	// UART 
 	DBG_Init();
-	Uart_Printf("Hello World\n\r");
 
 	// PIT setup
 	PIT_initiailize();
 
 	while(1) 
 	{
-		//n++;
-		// print
-		Uart_Printf("%d\n",n);
+		ms++;
+		if(ms == 100)
+		{	
+			ms = 0;
+			s++;
+		}
+		
+		if (s == 60)
+		{
+			s = 0;
+			m++;
+		}
 
-		// wait for 1000ms
-		HW_delay_ms(1000);
+		if (m == 60)
+		{
+			m = 0;
+			h++;
+		}
 
+		if (h == 24)
+		{
+			h = 0;
+		}
+
+		Uart_Printf("\r\r%02d : %02d : %02d : %02d", h,m,s,ms);
+		HW_delay_ms(10);
 	}	
 }
