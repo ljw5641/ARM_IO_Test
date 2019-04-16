@@ -15,10 +15,15 @@
 #define LEFT	1
 #define RIGHT	2
 
-unsigned int 	Key_Count=0,Pre_Key_Data=0;
+unsigned int  Key_Count=0,Pre_Key_Data=0;
 unsigned char Switch_Check(void);
 unsigned char Port_Flag=0;
-unsigned int	Count=0; 
+unsigned int  Count=0; 
+
+int ms = 0;
+int s = 0;
+int m = 0;
+int h = 0;
 //============================================================================
 //  Function  : PIT Interrupt
 //============================================================================
@@ -193,47 +198,75 @@ void HW_delay_ms(unsigned int ms)
 	AT91F_PITDisableInt(AT91C_BASE_PITC);
 }  
 
-                                 
+// PIO interrupt service routine
+void PIO_ISR()
+{
+	// Reset the stop watch
+	ms = 0;
+	s = 0;
+	m = 0;
+	h = 0;
+}  
+
+void Interrupt_setup()
+{
+	// Use SW1 as an input
+	AT91F_PIO_InputFilterEnable(AT91C_BASE_PIOA, SW1);
+	
+	// set interrupt to SW1
+	AT91F_PIO_InterruptEnable(AT91C_BASE_PIOA, SW1);
+	
+	// Set Callback funtion
+	AT91F_AIC_ConfigureIt(AT91C_BASE_AIC,AT91C_ID_PIOA, 7, 1, PIO_ISR);
+	
+	// Enable AIC
+	//AT91F_AIC_EnableIt(AT91C_BASE_AIC,AT91C_ID_PIOA);
+}
+	                                     
 int main()
 {
-	int ms = 0;
-	int s = 0;
-	int m = 0;
-	int h = 0;
-	
+	// Port_Setup
+	Port_Setup();
+
   	// UART 
 	DBG_Init();
 
 	// PIT setup
 	PIT_initiailize();
 
+	// Interrupt_setup
+	Interrupt_setup();
+	
 	while(1) 
 	{
-		ms++;
+		
 		if(ms == 100)
-		{	
+		{
 			ms = 0;
 			s++;
+			rPIO_SODR_B=(LED1);
 		}
-		
+
 		if (s == 60)
 		{
 			s = 0;
 			m++;
+			rPIO_SODR_B=(LED2);
 		}
 
 		if (m == 60)
 		{
 			m = 0;
 			h++;
+			rPIO_SODR_B=(LED3);	
 		}
 
-		if (h == 24)
-		{
-			h = 0;
-		}
+		if (h == 24) h = 0;
 
 		Uart_Printf("\r\r%02d : %02d : %02d : %02d", h,m,s,ms);
+		
+		rPIO_CODR_B=(LED1|LED2|LED3);
 		HW_delay_ms(10);
+		ms++;
 	}	
 }
