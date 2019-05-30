@@ -213,11 +213,6 @@ void PIT_initiailize()
 	AT91F_AIC_EnableIt(AT91C_BASE_AIC, AT91C_ID_SYS);
 }
 
- 
-
- 
-
- 
 
 /*// delay in ms by PIT interrupt
 
@@ -259,18 +254,9 @@ void HW_delay_10us(unsigned int ten_us)
 } 
 
 
-// PIO interrupt service routine
+// PIO interrupt service routine 
 
-void PIO_ISR()
-{
-	// Reset the stop watch
-	ms = 0;
-	s = 0;
-	m = 0;
-	h = 0;
-}  
-
-void Interrupt_setup()
+/*void Interrupt_setup()
 {
 	// Use SW1 as an input
 	AT91F_PIO_InputFilterEnable(AT91C_BASE_PIOA, SW1);
@@ -283,6 +269,133 @@ void Interrupt_setup()
 
 	// Enable AIC
 	//AT91F_AIC_EnableIt(AT91C_BASE_AIC,AT91C_ID_PIOA);
+} */
+
+
+__inline void set_SMR (
+	AT91PS_AIC pAic,  // \arg pointer to the AIC registers
+	unsigned int irq_id,     // \arg interrupt number to initialize
+	unsigned int priority,   // \arg priority to give to the interrupt
+	unsigned int src_type)   // \arg activation and sense of activation
+{
+    unsigned int mask ;
+
+    mask = 0x1 << irq_id ;
+    
+    //* Disable the interrupt on the interrupt controller
+    pAic->AIC_IDCR = mask ;
+    
+    //* Store the Source Mode Register
+    pAic->AIC_SMR[irq_id] = src_type | priority  ;
+    
+    //* Clear the interrupt on the interrupt controller
+    pAic->AIC_ICCR = mask ;
+}
+
+void Ultra_Interrupt_setup();
+int mode = 0;
+int trigger_ultrasonic = 0;
+void PIO_ISR()
+{
+	// Reset the stop watch
+	/*ms = 0;
+	s = 0;
+	m = 0;
+	h = 0;*/
+	unsigned int priority = 7;
+	
+	if(mode == 0)
+	{
+		trigger_ultrasonic = 0;
+		//Uart_Printf("PIO_ISR - mode == 0 - Echo on\n");
+		
+	    //AT91F_AIC_DisableIt(AT91C_BASE_AIC,AT91C_ID_PIOA);
+		//Uart_Printf("PIO_ISR - mode == 0 - AT91F_AIC_DisableIt\n");
+		
+		TC_Start(AT91C_BASE_TC0);
+		//Uart_Printf("PIO_ISR - mode == 0 - TC_Start\n");
+		
+		rAIC_SMR2 = (AT91C_AIC_SRCTYPE_EXT_NEGATIVE_EDGE|priority);
+		//Uart_Printf("PIO_ISR - mode == 0 - AT91C_AIC_SRCTYPE_EXT_NEGATIVE_EDGE\n");
+		
+		mode = 1;
+		//Uart_Printf("PIO_ISR - mode == 0 - mode\n");
+		
+		//AT91F_AIC_EnableIt(AT91C_BASE_AIC,AT91C_ID_PIOA);
+		//Uart_Printf("PIO_ISR - mode == 0 - AT91F_AIC_EnableIt\n");
+	}
+	else if(mode == 1)
+	{
+		Uart_Printf("PIO_ISR - mode == 1 - Echo off\n");
+		
+	    AT91F_AIC_DisableIt(AT91C_BASE_AIC,AT91C_ID_PIOA);
+		Uart_Printf("PIO_ISR - mode == 1 - AT91F_AIC_DisableIt\n");
+		
+		TC_Stop(AT91C_BASE_TC0);
+		Uart_Printf("PIO_ISR - mode == 1 - TC_Stop\n");
+		
+		Uart_Printf("\t%lf cm\n\r", (double)(AT91C_BASE_TC0->TC_CV)/(58.0*1.5));
+		
+		rAIC_SMR2 = (AT91C_AIC_SRCTYPE_POSITIVE_EDGE|priority);
+		//rAIC_SMR2 = ((unsigned int)1|priority);
+		//rAIC_SMR2 = (1|priority);
+		//Ultra_Interrupt_setup();
+		//set_SMR(AT91C_BASE_AIC, AT91C_ID_PIOA, priority, AT91C_AIC_SRCTYPE_POSITIVE_EDGE);
+		Uart_Printf("PIO_ISR - AT91C_AIC_SRCTYPE_POSITIVE_EDGE\n");
+
+		AT91F_AIC_EnableIt(AT91C_BASE_AIC,AT91C_ID_PIOA);
+		Uart_Printf("PIO_ISR - mode == 1 - AT91F_AIC_EnableIt\n");
+		
+		mode = 0;
+		Uart_Printf("PIO_ISR - mode = 0\n");
+		
+		trigger_ultrasonic = 1;
+		Uart_Printf("PIO_ISR - mode == 1 - trigger_ultrasonic\n");
+		
+		/*
+		//HW_delay_10us(6000);
+		//Uart_Printf("PIO_ISR - HW_delay_10us(6000)\n");
+		
+		//[1] set trigger pin (PA0) on
+  		rPIO_SODR_A=(ULTRASONIC_TRIGGER);
+		Uart_Printf("PIO_ISR - rPIO_SODR_A\n");
+
+  		//[2] wait for 10us
+  		HW_delay_10us(1);
+		Uart_Printf("PIO_ISR - HW_delay_10us(1)\n");
+
+  		//[3] set trigger pin, echo pin off6
+  		rPIO_CODR_A=(ULTRASONIC_TRIGGER);
+
+		Uart_Printf("PIO_ISR - mode == 1 - rPIO_CODR_A\n");
+		*/
+	}
+} 
+
+void Ultra_Interrupt_setup()
+{  	
+	unsigned int priority = 7;
+	
+	AT91F_AIC_DisableIt(AT91C_BASE_AIC,AT91C_ID_PIOA);
+	
+	// Use SW1 as an input
+  	Uart_Printf("Ultra_Interrupt_setup - 1\n");
+	AT91F_PIO_InputFilterEnable(AT91C_BASE_PIOA, ULTRASONIC_ECHO);
+
+	// set interrupt to SW1
+  	Uart_Printf("Ultra_Interrupt_setup - 2\n");
+	AT91F_PIO_InterruptEnable(AT91C_BASE_PIOA, ULTRASONIC_ECHO);
+
+	// Set Callback funtion
+  	Uart_Printf("Ultra_Interrupt_setup - 3\n");
+	//AT91F_AIC_ConfigureIt(AT91C_BASE_AIC,AT91C_ID_PIOA, priority, AT91C_AIC_SRCTYPE_POSITIVE_EDGE, PIO_ISR);
+	AT91F_AIC_ConfigureIt(AT91C_BASE_AIC, AT91C_ID_PIOA, priority, 1, PIO_ISR);
+
+	// Enable AIC
+  	Uart_Printf("Ultra_Interrupt_setup - 4\n");
+	AT91F_AIC_EnableIt(AT91C_BASE_AIC, AT91C_ID_PIOA);
+	
+  	Uart_Printf("Ultra_Interrupt_setup - 5\n");
 }
 
 void TC_initialize()
@@ -299,7 +412,6 @@ void TC_initialize()
   TC_Configure(AT91C_BASE_TC0, AT91C_TC_CLKS_TIMER_DIV3_CLOCK | AT91C_TC_ASWTRG); 
 }
 
-
 int main()
 {
   int n =0;
@@ -313,37 +425,79 @@ int main()
 
   // PIT setup
   PIT_initiailize();
+  
+  HW_delay_10us(100000); // wait 10 microsecond
+  Uart_Printf("Delay test\n");
 
   // Timer counter
   TC_initialize();
+  Uart_Printf(" 888888 ");
+  
+  // Interrupt set up
+  Ultra_Interrupt_setup();
+  Uart_Printf(" 212121 ");
+  
+  //[1] set trigger pin (PA0) on
+  rPIO_SODR_A=(ULTRASONIC_TRIGGER);
+
+  //[2] wait for 10us
+  HW_delay_10us(1);
+
+  //[3] set trigger pin, echo pin off
+  rPIO_CODR_A=(ULTRASONIC_TRIGGER);
+  
+  while(true)
+  {
+	Uart_Printf("iter = %d\n: ", n);
+	if(trigger_ultrasonic)
+	{
+	  	trigger_ultrasonic = 0;
+	  	
+		//HW_delay_10us(6000);
+		//Uart_Printf("PIO_ISR - HW_delay_10us(6000)\n");
+		
+		//[1] set trigger pin (PA0) on
+		rPIO_SODR_A=(ULTRASONIC_TRIGGER);
+		Uart_Printf("while - rPIO_SODR_A\n");
+
+		//[2] wait for 10us
+		HW_delay_10us(1);
+		Uart_Printf("while - HW_delay_10us(1)\n");
+
+		//[3] set trigger pin, echo pin off6
+		rPIO_CODR_A=(ULTRASONIC_TRIGGER);
+
+		Uart_Printf("while - rPIO_CODR_A\n");	  
+	}
+	n++;
+	HW_delay_10us(100000); // wait 10 microsecond
+  }
+  
+  
+  /*//[Polling]
+  rPIO_CODR_A=(ULTRASONIC_TRIGGER|ULTRASONIC_ECHO);
+
+  //[1] set trigger pin (PA0) on
+  rPIO_SODR_A=(ULTRASONIC_TRIGGER);
+
+  //[2] wait for 10us
+  HW_delay_10us(1);
+
+  //[3] set trigger pin, echo pin off
+  rPIO_CODR_A=(ULTRASONIC_TRIGGER);
 
   while(1) 
   {
     Uart_Printf("iter = %d : ", n);
-
-    //LEC ON
-    //rPIO_SODR_B=(LED1|LED2|LED3);
-
-	//[Polling]
-	rPIO_CODR_A=(ULTRASONIC_TRIGGER|ULTRASONIC_ECHO);
-
-	//[1] set trigger pin (PA0) on
-	rPIO_SODR_A=(ULTRASONIC_TRIGGER);
-
-	//[2] wait for 10us
-	HW_delay_10us(1);
-
-	//[3] set trigger pin, echo pin off
-	rPIO_CODR_A=(ULTRASONIC_TRIGGER);
-
+		
+	//AT91F_PIO_InputFilterEnable(AT91C_BASE_PIOA,ULTRASONIC_ECHO);
+	//AT91F_PIO_InterruptEnable(AT91C_BASE_PIOA, ULTRASONIC_ECHO);
+	//AT91F_PIO_InterruptDisable(AT91C_BASE_PIOA, ULTRASONIC_ECHO);
 
 	//[4] listen to Echo pin (PA1) if it's on 
 	while(1)
 	{
-		if(AT91F_PIO_IsInputSet(AT91C_BASE_PIOA,ULTRASONIC_ECHO))
-		{
-			break;
-		}
+		if(AT91F_PIO_IsInputSet(AT91C_BASE_PIOA,ULTRASONIC_ECHO)) break;
 	}
 
 	//[5] start the timer
@@ -352,56 +506,21 @@ int main()
 	//[6] listen to Echo pin if it's off
 	while(1)
 	{
-		if(!AT91F_PIO_IsInputSet(AT91C_BASE_PIOA,ULTRASONIC_ECHO))
-		{
-			break;
-		}
+		if(!AT91F_PIO_IsInputSet(AT91C_BASE_PIOA,ULTRASONIC_ECHO)) break;
 	}
 	
 	//[7] stop the timer
 	TC_Stop(AT91C_BASE_TC0);
 	
 	//[8] TC_CV -> cm
-	// TC_CV = 24 clocks / us
-	// Ultrasonic = 1cm / 58us
-	// 58/24 cm / clock
-	//Uart_Printf("\t%lf cm\n\r", (double)(AT91C_BASE_TC0->TC_CV)/(58.0*24.0)); // TIMER_CLOCK1
 
 	// TC_CV = 1.5 clocks / us
 	// Ultrasonic = 1cm / 58us
 	// 1/(1.5*58) cm / clock
 	Uart_Printf("\t%lf cm\n\r", (double)(AT91C_BASE_TC0->TC_CV)/(58.0*1.5)); // TIMER_CLOCK3
 
-	
-
-	
-	
-
-    // 타이머시작
-    /*TC_Start(AT91C_BASE_TC0);
-
-	// 딜레이
-    HW_delay_10us(1);
-
-    // 타이머스탑
-    TC_Stop(AT91C_BASE_TC0);
-
-    //오버플로우?
-    if (AT91C_BASE_TC0-> TC_SR & AT91C_TC_COVFS)
-    {
-      Uart_Printf("Overflow - ");
-    }
-    else
-    {
-      Uart_Printf("Normal - ");
-    }
-
-    // 타이머값
-    Uart_Printf("\tStop TC1 = %u clocks = %lf ms\n\r", AT91C_BASE_TC0->TC_CV , (double)AT91C_BASE_TC0->TC_CV/48000.0); //\tStop , (double)AT91C_BASE_TC0->TC_CV/48000.0
-
-    rPIO_CODR_B=(LED1|LED2|LED3);
-    */
     HW_delay_10us(50000);
     n++;
-  } 
+  }*/
+
 }
