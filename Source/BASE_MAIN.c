@@ -307,22 +307,22 @@ void PIO_ISR()
 	if(mode == 0)
 	{
 		trigger_ultrasonic = 0;
-		//Uart_Printf("PIO_ISR - mode == 0 - Echo on\n");
+		Uart_Printf("PIO_ISR - mode == 0 - Echo on\n");
 		
-	    //AT91F_AIC_DisableIt(AT91C_BASE_AIC,AT91C_ID_PIOA);
-		//Uart_Printf("PIO_ISR - mode == 0 - AT91F_AIC_DisableIt\n");
+	    AT91F_AIC_DisableIt(AT91C_BASE_AIC,AT91C_ID_PIOA);
+		Uart_Printf("PIO_ISR - mode == 0 - AT91F_AIC_DisableIt\n");
 		
 		TC_Start(AT91C_BASE_TC0);
-		//Uart_Printf("PIO_ISR - mode == 0 - TC_Start\n");
+		Uart_Printf("PIO_ISR - mode == 0 - TC_Start\n");
 		
 		rAIC_SMR2 = (AT91C_AIC_SRCTYPE_EXT_NEGATIVE_EDGE|priority);
-		//Uart_Printf("PIO_ISR - mode == 0 - AT91C_AIC_SRCTYPE_EXT_NEGATIVE_EDGE\n");
-		
+		Uart_Printf("PIO_ISR - mode == 0 - AT91C_AIC_SRCTYPE_EXT_NEGATIVE_EDGE\n");
+		Uart_Printf("%i\n",rAIC_SMR2);
 		mode = 1;
-		//Uart_Printf("PIO_ISR - mode == 0 - mode\n");
+		Uart_Printf("PIO_ISR - mode == 0 - mode\n");
 		
-		//AT91F_AIC_EnableIt(AT91C_BASE_AIC,AT91C_ID_PIOA);
-		//Uart_Printf("PIO_ISR - mode == 0 - AT91F_AIC_EnableIt\n");
+		AT91F_AIC_EnableIt(AT91C_BASE_AIC,AT91C_ID_PIOA);
+		Uart_Printf("PIO_ISR - mode == 0 - AT91F_AIC_EnableIt\n");
 	}
 	else if(mode == 1)
 	{
@@ -376,6 +376,7 @@ void Ultra_Interrupt_setup()
 {  	
 	unsigned int priority = 7;
 	
+	Uart_Printf("Ultra_Interrupt_setup - 0\n");
 	AT91F_AIC_DisableIt(AT91C_BASE_AIC,AT91C_ID_PIOA);
 	
 	// Use SW1 as an input
