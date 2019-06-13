@@ -10,6 +10,7 @@
 #include <aic/aic.h>
 #include <utility\trace.h>
 #include <cs8900a/cs8900a.h>
+#include <pwmc/pwmc.h>
 
 //For Switch
 #define LEFT	1
@@ -413,115 +414,54 @@ void TC_initialize()
   TC_Configure(AT91C_BASE_TC0, AT91C_TC_CLKS_TIMER_DIV3_CLOCK | AT91C_TC_ASWTRG); 
 }
 
+
+#define PWM_FREQUENCY    20000
+#define MAX_DUTY_CYCLE   50
+#define MIN_DUTY_CYCLE   20
+#define CHANNEL_PWM_LED1 1
+#define CHANNEL_PWM_LED2 2
+#define PIN_PWMC_LED1  {LED1, AT91C_BASE_PIOB, AT91C_ID_PIOB, PIO_PERIPH_B, PIO_DEFAULT}
+#define PIN_PWMC_LED2  {LED2, AT91C_BASE_PIOB, AT91C_ID_PIOB, PIO_PERIPH_B, PIO_DEFAULT}
+
+// B 19,20,21,22 / 27,28,29,30
+const Pin pins[] =
+{
+	PINS_DBGU,
+	PIN_PWMC_LED1,
+	PIN_PWMC_LED2
+};
+
 int main()
 {
-  int n =0;
-
-  // Port set up
-  Port_Setup();
-
-  // UART 
-  DBG_Init();
-  Uart_Printf("Ultrasound - Test\n\r");
-
-  // PIT setup
-  PIT_initiailize();
-  
-  HW_delay_10us(100000); // wait 10 microsecond
-  Uart_Printf("Delay test\n");
-
-  // Timer counter
-  TC_initialize();
-  Uart_Printf(" 888888 ");
-  
-  // Interrupt set up
-  Ultra_Interrupt_setup();
-  Uart_Printf(" 212121 ");
-  
-  //[1] set trigger pin (PA0) on
-  rPIO_SODR_A=(ULTRASONIC_TRIGGER);
-
-  //[2] wait for 10us
-  HW_delay_10us(1);
-
-  //[3] set trigger pin, echo pin off
-  rPIO_CODR_A=(ULTRASONIC_TRIGGER);
-  
-  while(true)
-  {
-	Uart_Printf("iter = %d\n: ", n);
-	if(trigger_ultrasonic)
+	// PIO Set up
+	PIO_Configure(pins, PIO_LISTSIZE(pins));
+	
+	// Enable PWMC
+	AT91F_PWMC_CfgPMC();
+	
+	// Clock Setting
+	PWMC_ConfigureClocks(PWM_FREQUENCY*MAX_DUTY_CYCLE, 0, BOARD_MCK);
+	
+	// Channel
+	PWMC_ConfigureChannel(CHANNEL_PWM_LED1, AT91C_PWMC_CPRE_MCKA, 0, 0);
+	PWMC_ConfigureChannel(CHANNEL_PWM_LED2, AT91C_PWMC_CPRE_MCKA, 0, 0);
+	
+	// Period
+	PWMC_SetPeriod(CHANNEL_PWM_LED1, MAX_DUTY_CYCLE);
+	PWMC_SetPeriod(CHANNEL_PWM_LED2, MAX_DUTY_CYCLE);
+	
+	// Duty cycle
+	PWMC_SetDutyCycle(CHANNEL_PWM_LED1, 0);
+	PWMC_SetDutyCycle(CHANNEL_PWM_LED2, 40);
+	
+	// Enable Channel
+	PWMC_EnableChannel(CHANNEL_PWM_LED1);
+	PWMC_EnableChannel(CHANNEL_PWM_LED2);
+	
+	while(true)
 	{
-	  	trigger_ultrasonic = 0;
-	  	
-		//HW_delay_10us(6000);
-		//Uart_Printf("PIO_ISR - HW_delay_10us(6000)\n");
-		
-		//[1] set trigger pin (PA0) on
-		rPIO_SODR_A=(ULTRASONIC_TRIGGER);
-		Uart_Printf("while - rPIO_SODR_A\n");
-
-		//[2] wait for 10us
-		HW_delay_10us(1);
-		Uart_Printf("while - HW_delay_10us(1)\n");
-
-		//[3] set trigger pin, echo pin off6
-		rPIO_CODR_A=(ULTRASONIC_TRIGGER);
-
-		Uart_Printf("while - rPIO_CODR_A\n");	  
-	}
-	n++;
-	HW_delay_10us(100000); // wait 10 microsecond
-  }
-  
-  
-  /*//[Polling]
-  rPIO_CODR_A=(ULTRASONIC_TRIGGER|ULTRASONIC_ECHO);
-
-  //[1] set trigger pin (PA0) on
-  rPIO_SODR_A=(ULTRASONIC_TRIGGER);
-
-  //[2] wait for 10us
-  HW_delay_10us(1);
-
-  //[3] set trigger pin, echo pin off
-  rPIO_CODR_A=(ULTRASONIC_TRIGGER);
-
-  while(1) 
-  {
-    Uart_Printf("iter = %d : ", n);
-		
-	//AT91F_PIO_InputFilterEnable(AT91C_BASE_PIOA,ULTRASONIC_ECHO);
-	//AT91F_PIO_InterruptEnable(AT91C_BASE_PIOA, ULTRASONIC_ECHO);
-	//AT91F_PIO_InterruptDisable(AT91C_BASE_PIOA, ULTRASONIC_ECHO);
-
-	//[4] listen to Echo pin (PA1) if it's on 
-	while(1)
-	{
-		if(AT91F_PIO_IsInputSet(AT91C_BASE_PIOA,ULTRASONIC_ECHO)) break;
-	}
-
-	//[5] start the timer
-	TC_Start(AT91C_BASE_TC0);
-
-	//[6] listen to Echo pin if it's off
-	while(1)
-	{
-		if(!AT91F_PIO_IsInputSet(AT91C_BASE_PIOA,ULTRASONIC_ECHO)) break;
+	
 	}
 	
-	//[7] stop the timer
-	TC_Stop(AT91C_BASE_TC0);
-	
-	//[8] TC_CV -> cm
-
-	// TC_CV = 1.5 clocks / us
-	// Ultrasonic = 1cm / 58us
-	// 1/(1.5*58) cm / clock
-	Uart_Printf("\t%lf cm\n\r", (double)(AT91C_BASE_TC0->TC_CV)/(58.0*1.5)); // TIMER_CLOCK3
-
-    HW_delay_10us(50000);
-    n++;
-  }*/
-
+	return 0;
 }
