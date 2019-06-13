@@ -99,24 +99,29 @@ void PIT_Interrupt_Setup(void)
 void Port_Setup(void)
 {
 	// PMC (Power Management Clock) enables peripheral clocks
-	AT91F_PMC_EnablePeriphClock ( AT91C_BASE_PMC, 1 << AT91C_ID_PIOB );
+	//AT91F_PMC_EnablePeriphClock ( AT91C_BASE_PMC, 1 << AT91C_ID_PIOB );
 	AT91F_PMC_EnablePeriphClock ( AT91C_BASE_PMC, 1 << AT91C_ID_PIOA );
 
 	// Enable PIO in output mode: Port A 0-7
 	//AT91F_PIO_CfgOutput( AT91C_BASE_PIOA,  PORTA);
 
 	// LED (Port B: 28-30)
-	AT91F_PIO_CfgOutput( AT91C_BASE_PIOB, LED1|LED2|LED3 ); // output mode
-	AT91F_PIO_CfgPullup( AT91C_BASE_PIOB, LED1|LED2|LED3 ); // pull-up
+	//AT91F_PIO_CfgOutput( AT91C_BASE_PIOB, LED1|LED2|LED3 ); // output mode
+	//AT91F_PIO_CfgPullup( AT91C_BASE_PIOB, LED1|LED2|LED3 ); // pull-up
 
 	// Switch (Port A: 8,9)
-	AT91F_PIO_CfgInput( AT91C_BASE_PIOA, SW1|SW2 ); // output mode
-	AT91F_PIO_CfgPullup( AT91C_BASE_PIOA, SW1|SW2 ); // pull-up
+	//AT91F_PIO_CfgInput( AT91C_BASE_PIOA, SW1|SW2 ); // output mode
+	//AT91F_PIO_CfgPullup( AT91C_BASE_PIOA, SW1|SW2 ); // pull-up
 
 	// Ultra
-	AT91F_PIO_CfgOutput(AT91C_BASE_PIOA, ULTRASONIC_TRIGGER);
-	AT91F_PIO_CfgInput(AT91C_BASE_PIOA, ULTRASONIC_ECHO);
-	AT91F_PIO_CfgPullup(AT91C_BASE_PIOA, ULTRASONIC_TRIGGER|ULTRASONIC_ECHO ); // pull-up
+	//AT91F_PIO_CfgOutput(AT91C_BASE_PIOA, ULTRASONIC_TRIGGER);
+	//AT91F_PIO_CfgInput(AT91C_BASE_PIOA, ULTRASONIC_ECHO);
+	//AT91F_PIO_CfgPullup(AT91C_BASE_PIOA, ULTRASONIC_TRIGGER|ULTRASONIC_ECHO ); // pull-up
+	
+	// Dot Matrix
+	AT91F_PIO_CfgOutput( AT91C_BASE_PIOA, PORTA );
+	AT91F_PIO_CfgPullup( AT91C_BASE_PIOA, PORTA );
+	
 
 //AT91F_PIO_SetOutput(AT91C_BASE_PIOA, (1<<13));
 //AT91F_PIO_ClearOutput(AT91C_BASE_PIOA, (1<<13));
@@ -431,37 +436,112 @@ const Pin pins[] =
 	PIN_PWMC_LED2
 };
 
+#define ROW1 PA8
+#define ROW2 PA9
+#define ROW3 PA13
+#define ROW4 PA2
+#define ROW5 PA14
+#define ROW6 PA4
+#define ROW7 PA5
+#define ROW8 PA11
+
+#define COL1 PA3
+#define COL2 PA6
+#define COL3 PA1
+#define COL4 PA7
+#define COL5 PA12
+#define COL6 PA0
+#define COL7 PA10
+#define COL8 PA15
+
 int main()
 {
-	// PIO Set up
-	PIO_Configure(pins, PIO_LISTSIZE(pins));
+	//Port set-up
+	Port_Setup();
 	
-	// Enable PWMC
-	AT91F_PWMC_CfgPMC();
+	// Port Clear
+	rPIO_CODR_A = PORTA;
 	
-	// Clock Setting
-	PWMC_ConfigureClocks(PWM_FREQUENCY*MAX_DUTY_CYCLE, 0, BOARD_MCK);
-	
-	// Channel
-	PWMC_ConfigureChannel(CHANNEL_PWM_LED1, AT91C_PWMC_CPRE_MCKA, 0, 0);
-	PWMC_ConfigureChannel(CHANNEL_PWM_LED2, AT91C_PWMC_CPRE_MCKA, 0, 0);
-	
-	// Period
-	PWMC_SetPeriod(CHANNEL_PWM_LED1, MAX_DUTY_CYCLE);
-	PWMC_SetPeriod(CHANNEL_PWM_LED2, MAX_DUTY_CYCLE);
-	
-	// Duty cycle
-	PWMC_SetDutyCycle(CHANNEL_PWM_LED1, 0);
-	PWMC_SetDutyCycle(CHANNEL_PWM_LED2, 40);
-	
-	// Enable Channel
-	PWMC_EnableChannel(CHANNEL_PWM_LED1);
-	PWMC_EnableChannel(CHANNEL_PWM_LED2);
-	
+	//loop
 	while(true)
 	{
-	
+		// Port Clear
+		rPIO_CODR_A = PORTA;
+		// Col
+		rPIO_SODR_A = (COL1|COL6|COL7|COL8|ROW1);
+		// Row
+		//rPIO_SODR_A |= ROW1;
+		//delay
+		Delay(10);
+		
+		
+		// Port Clear
+		rPIO_CODR_A = PORTA;
+		// Col
+		rPIO_SODR_A = (COL2|COL3|COL4|COL5|COL7|COL8);
+		// Row
+		rPIO_SODR_A |= ROW2;
+		//delay
+		Delay(10);
+		
+		
+		// Port Clear
+		rPIO_CODR_A = PORTA;
+		// Col
+		rPIO_SODR_A = (COL2|COL3|COL4|COL5|COL6|COL8);
+		// Row
+		rPIO_SODR_A |= ROW3;
+		//delay
+		Delay(10);
+		
+		
+		// Port Clear
+		rPIO_CODR_A = PORTA;
+		// Col
+		rPIO_SODR_A = (COL1|COL3|COL4|COL5|COL6|COL7);
+		// Row
+		rPIO_SODR_A |= ROW4;
+		//delay
+		Delay(10);
+		
+		
+		// Port Clear
+		rPIO_CODR_A = PORTA;
+		// Col
+		rPIO_SODR_A = (COL1|COL3|COL4|COL5|COL6|COL7);
+		// Row
+		rPIO_SODR_A |= ROW5;
+		//delay
+		Delay(10);
+		
+		
+		// Port Clear
+		rPIO_CODR_A = PORTA;
+		// Col
+		rPIO_SODR_A = (COL2|COL3|COL4|COL5|COL6|COL8);
+		// Row
+		rPIO_SODR_A |= ROW6;
+		//delay
+		Delay(10);
+		
+		// Port Clear
+		rPIO_CODR_A = PORTA;
+		// Col
+		rPIO_SODR_A = (COL2|COL3|COL4|COL5|COL7|COL8);
+		// Row
+		rPIO_SODR_A |= ROW7;
+		//delay
+		Delay(10);
+		
+		// Port Clear
+		rPIO_CODR_A = PORTA;
+		// Col
+		rPIO_SODR_A = (COL1|COL6|COL7|COL8);
+		// Row
+		rPIO_SODR_A |= ROW8;
+		//delay
+		Delay(10);
+		
 	}
-	
 	return 0;
 }
